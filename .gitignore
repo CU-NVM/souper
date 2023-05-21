@@ -1,4 +1,6 @@
 souperweb.tar.gz
+build_deps.sh
+lib/Infer/AliveDriver.cpp
 third_party
 build
 build-*
