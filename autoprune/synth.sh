@@ -1,7 +1,7 @@
 #!/bin/bash
 
-SEXE=../souper/souper-build/souper
-CEXE=../souper/souper-build/souper-check
+SEXE=../build/souper
+CEXE=../build/souper-check
 
 # if $1 is check, use CEXE, otherwise use SEXE
 if [ "$1" = "--check" ]; then
