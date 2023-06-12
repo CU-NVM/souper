@@ -47,6 +47,10 @@ namespace {
   static llvm::cl::opt<bool> EnableBB("souper-dataflow-pruning-bb",
     llvm::cl::desc("Prune with bivalent-bits analysis (default=true)"),
     llvm::cl::init(true));
+
+    static llvm::cl::opt<int> InputThreshold("souper-dataflow-pruning-threshold",
+    llvm::cl::desc("Threshold for how many inputs pruning should try (default=10)"),
+    llvm::cl::init(10));
 }
 
 namespace souper {
@@ -237,7 +241,7 @@ bool PruningManager::isInfeasible(souper::Inst *RHS,
   bool FoundNonTopAnalysisResult = false;
   ForcedValueAnalysis FVA(RHS);
   for (int I = 0; I < InputVals.size(); ++I) {
-    if (I > 9 && !FoundNonTopAnalysisResult) {
+    if (I >= InputThreshold && !FoundNonTopAnalysisResult) {
       break;
       // Give up if first 10 known bits and constant range results
       // are all TOP.
@@ -757,7 +761,7 @@ std::vector<ValueCache> PruningManager::generateInputSets(
   std::vector<ValueCache> InputSets;
 
   ValueCache Cache;
-
+  // input tests 0,1,-1,smin,smax are added here
   constexpr unsigned PermutedLimit = 15;
   std::string specialInputs = "abcde";
   std::unordered_set<std::string> Visited;
@@ -778,7 +782,8 @@ std::vector<ValueCache> PruningManager::generateInputSets(
     }
   } while (std::next_permutation(specialInputs.begin(), specialInputs.end()));
 
-
+  // input tests 0,1,-1,smin,smax are added again here
+  /*
   for (auto &&I : Inputs) {
     if (I->K == souper::Inst::Var)
       Cache[I] = {llvm::APInt(I->Width, 0)};
@@ -813,10 +818,12 @@ std::vector<ValueCache> PruningManager::generateInputSets(
   }
   if (isInputValid(Cache))
     InputSets.push_back(Cache);
+  */
 
+ // generate random inputs
   constexpr int MaxTries = 100;
   constexpr int NumLargeInputs = 5;
-  std::srand(0);
+  std::srand(time(0));
   int i, m;
   for (i = 0, m = 0; i < NumLargeInputs && m < MaxTries; ++m ) {
     for (auto &&I : Inputs) {
