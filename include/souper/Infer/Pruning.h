@@ -23,6 +23,7 @@
 #include "souper/Inst/Inst.h"
 
 #include <unordered_map>
+#include <time.h>
 
 namespace souper {
 
