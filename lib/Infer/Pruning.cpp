@@ -661,7 +661,7 @@ bool isDataflowConsistent(ValueCache &Cache) {
       if (I->Negative && !V.isNegative()) {
         return false;
       }
-
+      //Rohan's changes (<= check)
       if (I->NumSignBits > V.getNumSignBits()) {
         return false;
       }
@@ -734,23 +734,23 @@ void PruningManager::improveMustDemandedBits(InputVarInfo &IVI) {
   }
 }
 
-namespace {
-  llvm::APInt getSpecialAPInt(char C, unsigned Width) {
-    switch (C) {
-    case 'a':
-      return llvm::APInt(Width, -1);
-    case 'b':
-      return llvm::APInt(Width, 1);
-    case 'c':
-      return llvm::APInt(Width, 0);
-    case 'd':
-      return llvm::APInt::getSignedMaxValue(Width);
-    case 'e':
-      return llvm::APInt::getSignedMinValue(Width);
-    }
-    return llvm::APInt::getSignedMinValue(Width);
-  }
-} // anon
+// namespace {
+//   llvm::APInt getSpecialAPInt(char C, unsigned Width) {
+//     switch (C) {
+//     case 'a':
+//       return llvm::APInt(Width, -1);
+//     case 'b':
+//       return llvm::APInt(Width, 1);
+//     case 'c':
+//       return llvm::APInt(Width, 0);
+//     case 'd':
+//       return llvm::APInt::getSignedMaxValue(Width);
+//     case 'e':
+//       return llvm::APInt::getSignedMinValue(Width);
+//     }
+//     return llvm::APInt::getSignedMinValue(Width);
+//   }
+// } // anon
 
 std::vector<ValueCache> PruningManager::generateInputSets(
   std::vector<Inst *> &Inputs) {
@@ -758,25 +758,30 @@ std::vector<ValueCache> PruningManager::generateInputSets(
 
   ValueCache Cache;
 
-  constexpr unsigned PermutedLimit = 15;
-  std::string specialInputs = "abcde";
-  std::unordered_set<std::string> Visited;
-  do {
-    int i = 0;
-    std::string usedInput;
-    for (auto &&I : Inputs) {
-      if (I->K == souper::Inst::Var) {
-        usedInput.append(1, specialInputs[i]);
-        Cache[I] = getSpecialAPInt(specialInputs[i++], I->Width);
-      }
-    }
+  // constexpr unsigned PermutedLimit = 15;
+  
+  //Rohan Change
 
-    if (!Visited.count(usedInput) && isInputValid(Cache)) {
-      if (InputSets.size() >= PermutedLimit) break;
-      InputSets.push_back(Cache);
-      Visited.insert(usedInput);
-    }
-  } while (std::next_permutation(specialInputs.begin(), specialInputs.end()));
+  // std::string specialInputs = "abcde";
+  // std::unordered_set<std::string> Visited;
+  // std::string usedInput;
+  // do {
+  //   // llvm::errs()<<"Special inputs " <<specialInputs;
+  //   int i = 0;
+  //   for (auto &&I : Inputs) {
+  //     if (I->K == souper::Inst::Var) {
+  //       usedInput.append(1, specialInputs[i]);
+  //       Cache[I] = getSpecialAPInt(specialInputs[i++], I->Width);
+    
+  //     }
+  //   }
+
+  //   if (!Visited.count(usedInput) && isInputValid(Cache)) {
+  //     if (InputSets.size() >= PermutedLimit) break;
+  //     InputSets.push_back(Cache);
+  //     Visited.insert(usedInput);
+  //   }
+  // } while (std::next_permutation(specialInputs.begin(), specialInputs.end()));
 
 
   for (auto &&I : Inputs) {
@@ -837,7 +842,9 @@ std::vector<ValueCache> PruningManager::generateInputSets(
   for (i = 0, m = 0; i < NumSmallInputs && m < MaxTries; ++m ) {
     for (auto &&I : Inputs) {
       if (I->K == souper::Inst::Var)
-        Cache[I] = {llvm::APInt(I->Width, std::rand() % I->Width)};
+        //Rohan Change
+        Cache[I] = {llvm::APInt(I->Width, std::rand() % (llvm::APInt::getSignedMaxValue(I->Width).getLimitedValue()))};
+        // Cache[I] = {llvm::APInt(I->Width, std::rand() % I->Width)};
     }
     if (isInputValid(Cache)) {
       i++;

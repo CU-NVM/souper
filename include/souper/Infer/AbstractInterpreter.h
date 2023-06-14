@@ -281,6 +281,7 @@ namespace souper {
     bool Conflict;
   };
 
+
 }
 
 #endif

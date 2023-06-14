@@ -40,7 +40,7 @@ result %5
 
 ; CHECK: Pruning failed
 
-%0:i8 = var
+%0:i8 = var (range = [100,200))
 %1:i32 = sext %0
 %2:i1 = eq 0:i32, %1
 infer %2
