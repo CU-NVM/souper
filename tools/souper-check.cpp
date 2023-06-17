@@ -88,6 +88,34 @@ static cl::opt<bool> CheckAllGuesses("souper-check-all-guesses",
     cl::desc("Continue even after a valid RHS is found. (default=false)"),
     cl::init(false));
 
+void OpsTree(Inst* I, int depth) {
+  // indent for tree depth
+  std::string indent = "";
+  for (int i = 0; i < depth; i++) {
+    if (i == depth-1)
+      indent += "|---";
+    else
+      indent += "    ";
+
+  }
+  std::string k = Inst::getKindName(I->K);
+  // print kind name and then other relevant info depending on kind
+  llvm::errs() << indent << k;
+  if (k=="const") 
+    llvm::errs() << " " << I->Val;
+  else if (k=="var") {
+    // can check for input or reservedconst using SynthesisConstID
+    std::string s = I->SynthesisConstID == 0 ? " (input)" : " (reservedconst)";
+    llvm::errs() << " " << I->Name << s;
+  }
+  llvm::errs() << "\n";
+  // print children
+  for (int i = 0; i < I->Ops.size(); i++) {
+    OpsTree(I->Ops[i], depth+1);
+  }
+}
+
+
 int SolveInst(const MemoryBufferRef &MB, Solver *S) {
   InstContext IC;
   std::string ErrStr;
@@ -311,6 +339,10 @@ int SolveInst(const MemoryBufferRef &MB, Solver *S) {
         }
       }
     } else if (TryDataflowPruning) {
+      llvm::errs() << "LHS\n";
+      OpsTree(Rep.Mapping.LHS, 1);
+      llvm::errs() << "RHS\n";
+      OpsTree(Rep.Mapping.RHS, 1);
       SynthesisContext SC{IC, /*Solver(UNUSED)*/nullptr, Rep.Mapping.LHS,
         /*LHSUB(UNUSED)*/nullptr, Rep.PCs, Rep.BPCs,
         /*CheckAllGuesses(UNUSED)*/true, /*Timeout(UNUSED)*/100};
