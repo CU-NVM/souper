@@ -88,8 +88,9 @@ static cl::opt<bool> CheckAllGuesses("souper-check-all-guesses",
     cl::desc("Continue even after a valid RHS is found. (default=false)"),
     cl::init(false));
 
-void OpsTree(Inst* I, int depth) {
-  // indent for tree depth
+
+void OpsTree(Inst* I ,int depth) {
+ 
   std::string indent = "";
   for (int i = 0; i < depth; i++) {
     if (i == depth-1)
@@ -111,10 +112,53 @@ void OpsTree(Inst* I, int depth) {
   llvm::errs() << "\n";
   // print children
   for (int i = 0; i < I->Ops.size(); i++) {
+    // llvm::outs()<<"Ops\n" <<I->Ops.size();
     OpsTree(I->Ops[i], depth+1);
   }
 }
 
+//Rohan's changes
+static int16_t result = -1;
+static uint64_t mod_val = 3;
+static uint16_t var_val = 100; //taking some value for var
+
+int16_t ModuloAnalysis(Inst* I){
+
+  std::string KindName = I->getKindName(I->K);
+
+  // llvm::outs() << "Name : "<<I->Name <<" Kind:"<< I->getKindName(I->K) << " val :"<<I->Val<<"\n";
+
+      if (KindName == "var"){
+          result = var_val % 3;}
+      else if (KindName == "const"){
+          result = I->Val.urem(mod_val);
+          }
+      else if (KindName == "add" || KindName == "sub"){
+        int left_op = ModuloAnalysis(I->Ops[0]);
+        int right_op = ModuloAnalysis(I->Ops[1]);
+        if (left_op == -10 || right_op == -10){
+          result = -10;}
+        else{
+          if (KindName == "add"){
+          result = (left_op + right_op)%3;
+          }
+          else{
+            result = (left_op - right_op)%3;
+          }
+        }}
+      else if (KindName == "mul"){
+        int left_op = ModuloAnalysis(I->Ops[0]);
+        int right_op = ModuloAnalysis(I->Ops[1]);
+
+        if (left_op == 0 || right_op == 0)
+          result = 0;
+        else
+          result = -10;
+      }
+      if (result < 0)
+        result = -10; // Random negative value to indicate no-pruning
+  return result;
+}
 
 int SolveInst(const MemoryBufferRef &MB, Solver *S) {
   InstContext IC;
@@ -339,10 +383,6 @@ int SolveInst(const MemoryBufferRef &MB, Solver *S) {
         }
       }
     } else if (TryDataflowPruning) {
-      llvm::errs() << "LHS\n";
-      OpsTree(Rep.Mapping.LHS, 1);
-      llvm::errs() << "RHS\n";
-      OpsTree(Rep.Mapping.RHS, 1);
       SynthesisContext SC{IC, /*Solver(UNUSED)*/nullptr, Rep.Mapping.LHS,
         /*LHSUB(UNUSED)*/nullptr, Rep.PCs, Rep.BPCs,
         /*CheckAllGuesses(UNUSED)*/true, /*Timeout(UNUSED)*/100};
@@ -350,6 +390,20 @@ int SolveInst(const MemoryBufferRef &MB, Solver *S) {
       findVars(SC.LHS, Inputs);
       PruningManager P(SC, Inputs, /*StatsLevel=*/3);
       P.init();
+
+    // Rohan
+
+      // llvm::outs()<<"LHS ";
+
+     
+      OpsTree(Rep.Mapping.LHS,1);
+      // llvm::outs()<<"RHS \n";
+      // OpsTree(Rep.Mapping.RHS,1);
+      int16_t left = ModuloAnalysis(Rep.Mapping.LHS);
+      int16_t right = ModuloAnalysis(Rep.Mapping.RHS);
+      llvm::outs() <<"left value: " << left <<" right value: "<<right<<"\n";
+      
+
       if (P.isInfeasible(Rep.Mapping.RHS, /*StatsLevel=*/3)) {
         llvm::outs() << "Pruning succeeded.\n";
       } else {
