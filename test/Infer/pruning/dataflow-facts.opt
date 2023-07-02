@@ -5,10 +5,11 @@
 
 ; CHECK: Pruning failed
 
-%0:i16 = var (nonNegative)
-%1 = sdiv %0, 8
+%0:i16 = var 
+%1 = add %0,50
 infer %1
-%2:i16 = reservedconst
-%3 = lshr %0, %2
-result %3
+%2:i16 = reservedconst 
+%3 = mul %2,3
+%4 = add %0,%3
+result %4
 

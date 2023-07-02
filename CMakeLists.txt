@@ -204,6 +204,9 @@ set(SOUPER_INFER_FILES
   include/souper/Infer/Interpreter.h
   lib/Infer/Preconditions.cpp
   include/souper/Infer/Preconditions.h
+  lib/Infer/ModAnalysis.cpp
+  include/souper/Infer/ModAnalysis.h
+
 )
 
 add_library(souperInfer STATIC

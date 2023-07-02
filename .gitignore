@@ -4,4 +4,6 @@ lib/Infer/AliveDriver.cpp
 third_party
 build
 build-*
+.json
+.pkl
 *~
