@@ -361,8 +361,7 @@ int SolveInst(const MemoryBufferRef &MB, Solver *S) {
       static int count = 0;
       // OpsTree(Rep.Mapping.LHS,1);
       int16_t ModVal = ModAnalysis::ModAnalysisVal(Rep.Mapping.LHS,Rep.Mapping.RHS);
-
-      if (P.isInfeasible(Rep.Mapping.RHS, /*StatsLevel=*/3)) {
+      if (ModVal || P.isInfeasible(Rep.Mapping.RHS, /*StatsLevel=*/3)) {
         llvm::outs() << "Pruning succeeded.\n";
         llvm::outs()<<"Pruned via mod "<< count <<"\n";
       } else if(ModVal) {

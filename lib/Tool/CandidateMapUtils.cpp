@@ -48,6 +48,14 @@ namespace souper {
 bool SolveCandidateMap(llvm::raw_ostream &OS, CandidateMap &M,
                        Solver *S, InstContext &IC, KVStore *KVForStaticProfile) {
   if (S) {
+      //M[0].printFunction(OS);
+    OS << "All Candidates: " << M.size() << "\n";
+    ReplacementContext Context;
+    for (int I=0; I < M.size(); ++I) {
+      ReplacementContext Context; 
+      M[I].printLHS(OS, Context);
+      OS << "\n";
+    }
     OS << "; Listing valid replacements.\n";
     OS << "; Using solver: " << S->getName() << '\n';
 

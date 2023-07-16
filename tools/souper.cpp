@@ -33,7 +33,33 @@
 
 using namespace llvm;
 using namespace souper;
+void OpsTree(Inst* I ,int depth) {
+ 
+  std::string indent = "";
+  for (int i = 0; i < depth; i++) {
+    if (i == depth-1)
+      indent += "|---";
+    else
+      indent += "    ";
 
+  }
+  std::string k = Inst::getKindName(I->K);
+  // print kind name and then other relevant info depending on kind
+  llvm::errs() << indent << k;
+  if (k=="const") 
+    llvm::errs() << " " << I->Val;
+  else if (k=="var") {
+    // can check for input or reservedconst using SynthesisConstID
+    std::string s = I->SynthesisConstID == 0 ? " (input)" : " (reservedconst)";
+    llvm::errs() << " " << I->Name << s;
+  }
+  llvm::errs() << "\n";
+  // print children
+  for (int i = 0; i < I->Ops.size(); i++) {
+    // llvm::outs()<<"Ops\n" <<I->Ops.size();
+    OpsTree(I->Ops[i], depth+1);
+  }
+}
 unsigned DebugLevel;
 
 static cl::opt<unsigned, /*ExternalStorage=*/true>
@@ -116,7 +142,12 @@ int main(int argc, char **argv) {
   CandidateMap CandMap;
 
   AddModuleToCandidateMap(IC, EBC, CandMap, M.get());
-
+  llvm::outs() << "Original Code:\n";
+  ReplacementContext RContext;
+  for (int i = 0; i < IC.Insts.size(); i++) {
+    RContext.printInst(IC.Insts[i].get(),llvm::outs(),false);
+  }
+  llvm::outs() << "\n";
   if (Check) {
     return CheckCandidateMap(*M.get(), CandMap, S.get(), IC) ? 0 : 1;
   } else {

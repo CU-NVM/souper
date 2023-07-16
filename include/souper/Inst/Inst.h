@@ -239,11 +239,12 @@ class InstContext {
   typedef llvm::DenseMap<unsigned, std::vector<std::unique_ptr<Inst>>> InstMap;
   InstMap VarInstsByWidth;
 
-  std::vector<std::unique_ptr<Inst>> Insts;
+  //std::vector<std::unique_ptr<Inst>> Insts;
   llvm::FoldingSet<Inst> InstSet;
   unsigned ReservedConstCounter = 0;
 
 public:
+std::vector<std::unique_ptr<Inst>> Insts;
   Inst *getConst(const llvm::APInt &I);
   Inst *getUntypedConst(const llvm::APInt &I);
   Inst *getReservedConst();
