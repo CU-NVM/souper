@@ -17,15 +17,15 @@ void OpsTree(Inst* I, int depth) {
   }
   std::string k = Inst::getKindName(I->K);
   // print kind name and then other relevant info depending on kind
-  llvm::errs() << indent << k;
+  llvm::outs() << indent << k;
   if (k=="const") 
-    llvm::errs() << " " << I->Val;
+    llvm::outs() << " " << I->Val;
   else if (k=="var") {
     // can check for input or reservedconst using SynthesisConstID
     std::string s = I->SynthesisConstID == 0 ? " (input)" : " (reservedconst)";
-    llvm::errs() << " " << I->Name << s;
+    llvm::outs() << " " << I->Name << s;
   }
-  llvm::errs() << "\n";
+  llvm::outs() << "\n";
   // print children
   for (int i = 0; i < I->Ops.size(); i++) {
     OpsTree(I->Ops[i], depth+1);
@@ -49,31 +49,42 @@ int16_t FindModVal(Inst* I){
   // llvm::outs() << "Name : "<<I->Name <<" Kind:"<< I->getKindName(I->K) << " val :"<<I->Val<<"\n";
 
       if (KindName == "var"){
-          result = var_val % 3;}
+          result = var_val % mod_val;
+          }
       else if (KindName == "const"){
           result = I->Val.urem(mod_val);
           }
-      else if (KindName == "add" || KindName == "sub"){
+      else if (KindName == "add" || KindName == "sub" || KindName == "subnsw"){
         int left_op = FindModVal(I->Ops[0]);
         int right_op = FindModVal(I->Ops[1]);
         if (left_op == -10 || right_op == -10){
           result = -10;}
         else{
           if (KindName == "add"){
-          result = (left_op + right_op)%3;
+          result = (left_op + right_op) % mod_val;
           }
           else{
-            result = (left_op - right_op)%3;
+            result = (left_op - right_op) % mod_val;
           }
-        }}
-      else if (KindName == "mul"){
+        }
+        }
+      else if (KindName == "mul" || KindName == "mulnw"){
         int left_op = FindModVal(I->Ops[0]);
         int right_op = FindModVal(I->Ops[1]);
-
-        if (left_op == 0 || right_op == 0)
-          result = 0;
+        
+        if (left_op >= 0 || right_op >= 0)
+          result = (left_op * right_op) % mod_val;
         else
           result = -10;
+      }
+      else if (KindName == "zext" || KindName == "trunc"){
+        result = FindModVal(I->Ops[0]);
+      }
+      else if (KindName == "eq"){
+        result = (FindModVal(I->Ops[0]) == FindModVal(I->Ops[1]));
+      }
+      else if (KindName == "ne"){
+        result = (FindModVal(I->Ops[0]) != FindModVal(I->Ops[1]));
       }
       if (result < 0)
         result = -10; // Random negative value to indicate no-pruning

@@ -27,7 +27,7 @@
 
 using namespace llvm;
 using namespace souper;
-
+static int totcount = 0 ;
 unsigned DebugLevel;
 
 static cl::opt<unsigned, /*ExternalStorage=*/true>
@@ -141,6 +141,11 @@ int SolveInst(const MemoryBufferRef &MB, Solver *S) {
       llvm::WriteGraph(llvm::outs(), Rep.Mapping.LHS);
     }
   }
+  //Rohan
+
+    for (auto &Rep : Reps) {
+      ModAnalysis::OpsTree(Rep.Mapping.RHS,0);
+    }
 
   if (ParseOnly || ParseLHSOnly) {
     llvm::outs() << "; parsing successful\n";
@@ -341,6 +346,7 @@ int SolveInst(const MemoryBufferRef &MB, Solver *S) {
         }
       }
     } else if (TryDataflowPruning) {
+      
       SynthesisContext SC{IC, /*Solver(UNUSED)*/nullptr, Rep.Mapping.LHS,
         /*LHSUB(UNUSED)*/nullptr, Rep.PCs, Rep.BPCs,
         /*CheckAllGuesses(UNUSED)*/true, /*Timeout(UNUSED)*/100};
@@ -350,15 +356,21 @@ int SolveInst(const MemoryBufferRef &MB, Solver *S) {
       P.init();
 
     // Rohan
-
-      // llvm::outs()<<"LHS ";
-     
-      OpsTree(Rep.Mapping.LHS,1);
+      totcount+=1;
+      llvm::outs()<<"total count "<<totcount <<"\n";
+      static int count = 0;
+      // OpsTree(Rep.Mapping.LHS,1);
       int16_t ModVal = ModAnalysis::ModAnalysisVal(Rep.Mapping.LHS,Rep.Mapping.RHS);
 
       if (P.isInfeasible(Rep.Mapping.RHS, /*StatsLevel=*/3)) {
         llvm::outs() << "Pruning succeeded.\n";
-      } else {
+        llvm::outs()<<"Pruned via mod "<< count <<"\n";
+      } else if(ModVal) {
+        count+=1;
+        llvm::outs()<<"Pruned via mod "<< count <<"\n";
+      }
+      else{
+        llvm::outs()<<"Pruned via mod "<< count <<"\n";
         llvm::outs() << "Pruning failed.\n";
       }
     } else if (InferAP) {

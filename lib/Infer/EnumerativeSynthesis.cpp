@@ -20,6 +20,8 @@
 #include "souper/Infer/EnumerativeSynthesis.h"
 #include "souper/Infer/Pruning.h"
 
+#include "souper/Infer/ModAnalysis.h"
+
 #include <queue>
 #include <functional>
 #include <set>
@@ -835,6 +837,13 @@ EnumerativeSynthesis::synthesize(SMTLIBSolver *SMTSolver,
   std::vector<Inst *> Inputs;
   findVars(SC.LHS, Inputs);
   PruningManager DataflowPruning(SC, Inputs, DebugLevel);
+
+  //Rohan Change
+
+  for (Inst* Cand: Cands){
+    llvm::outs()<<"Candidates: \n";
+    ModAnalysis::OpsTree(Cand,0);
+  }
 
   std::set<Inst*> Visited(Cands.begin(), Cands.end());
 
