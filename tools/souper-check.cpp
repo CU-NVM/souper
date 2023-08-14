@@ -22,10 +22,11 @@
 #include "souper/Parser/Parser.h"
 #include "souper/Tool/GetSolver.h"
 #include "souper/Util/DfaUtils.h"
+#include "souper/Infer/InputSelect.cpp"
 
 using namespace llvm;
 using namespace souper;
-
+static int totcount = 0 ;
 unsigned DebugLevel;
 
 static cl::opt<unsigned, /*ExternalStorage=*/true>
@@ -88,8 +89,9 @@ static cl::opt<bool> CheckAllGuesses("souper-check-all-guesses",
     cl::desc("Continue even after a valid RHS is found. (default=false)"),
     cl::init(false));
 
-void OpsTree(Inst* I, int depth) {
-  // indent for tree depth
+// by liam: prints instruction tree
+void OpsTree(Inst* I ,int depth) {
+ 
   std::string indent = "";
   for (int i = 0; i < depth; i++) {
     if (i == depth-1)
@@ -111,11 +113,10 @@ void OpsTree(Inst* I, int depth) {
   llvm::errs() << "\n";
   // print children
   for (int i = 0; i < I->Ops.size(); i++) {
+    // llvm::outs()<<"Ops\n" <<I->Ops.size();
     OpsTree(I->Ops[i], depth+1);
   }
 }
-
-
 int SolveInst(const MemoryBufferRef &MB, Solver *S) {
   InstContext IC;
   std::string ErrStr;
@@ -339,16 +340,15 @@ int SolveInst(const MemoryBufferRef &MB, Solver *S) {
         }
       }
     } else if (TryDataflowPruning) {
-      llvm::errs() << "LHS\n";
-      OpsTree(Rep.Mapping.LHS, 1);
-      llvm::errs() << "RHS\n";
-      OpsTree(Rep.Mapping.RHS, 1);
+      
       SynthesisContext SC{IC, /*Solver(UNUSED)*/nullptr, Rep.Mapping.LHS,
         /*LHSUB(UNUSED)*/nullptr, Rep.PCs, Rep.BPCs,
         /*CheckAllGuesses(UNUSED)*/true, /*Timeout(UNUSED)*/100};
       std::vector<Inst *> Inputs;
       findVars(SC.LHS, Inputs);
       PruningManager P(SC, Inputs, /*StatsLevel=*/3);
+      // Input Selection
+      P.setSelectedInputs(FindInputs(Rep.Mapping.RHS));
       P.init();
       if (P.isInfeasible(Rep.Mapping.RHS, /*StatsLevel=*/3)) {
         llvm::outs() << "Pruning succeeded.\n";

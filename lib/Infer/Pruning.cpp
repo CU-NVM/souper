@@ -560,6 +560,7 @@ PruningManager::PruningManager(
                     StatsLevel(StatsLevel_),
                     InputVars(Inputs_) {}
 
+// inputs selected to be better than random ones are sent in the special inputs vector
 void PruningManager::init() {
   setPhiConcretePreds(SC.LHS);
   Ante = SC.IC.getConst(llvm::APInt(1, true));
@@ -567,10 +568,21 @@ void PruningManager::init() {
     Inst *Eq = SC.IC.getInst(Inst::Eq, 1, {PC.LHS, PC.RHS});
     Ante = SC.IC.getInst(Inst::And, 1, {Ante, Eq});
   }
-
   findVars(Ante, InputVars);
 
   InputVals = generateInputSets(InputVars);
+
+
+  for (int i = 0; i < SelectedInputs.size(); i++) {
+    // insert into InputVals by overwriting random inputs, (random inputs start at index 5)
+    if (i+5 < InputVals.size()) {
+      for (auto &&p : InputVals[i+5]) {
+        if (p.second.hasValue()) {
+          p.second.Value = SelectedInputs[i];
+        }
+      }
+    }
+  }
 
   for (auto &&Input : InputVals) {
     ConcreteInterpreters.emplace_back(SC.LHS, Input);

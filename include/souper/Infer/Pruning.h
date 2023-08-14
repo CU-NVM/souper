@@ -53,6 +53,8 @@ public:
   // not be called when pruning is disabled
 
   auto &getInputVals() {return InputVals;}
+
+  void setSelectedInputs(std::vector<int> selectedInputs) {SelectedInputs = selectedInputs;}
 private:
   SynthesisContext &SC;
   std::vector<ConcreteInterpreter> ConcreteInterpreters;
@@ -77,6 +79,7 @@ private:
   bool isInputValid(ValueCache &Cache);
   void improveMustDemandedBits(InputVarInfo &IVI);
   Inst *Ante;
+  std::vector<int> SelectedInputs; // inputs that will overwrite the prechosen random inputs
 };
 
 }
