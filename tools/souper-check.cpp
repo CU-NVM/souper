@@ -91,33 +91,33 @@ static cl::opt<bool> CheckAllGuesses("souper-check-all-guesses",
     cl::init(false));
 
 
-void OpsTree(Inst* I ,int depth) {
+// void OpsTree(Inst* I ,int depth) {
  
-  std::string indent = "";
-  for (int i = 0; i < depth; i++) {
-    if (i == depth-1)
-      indent += "|---";
-    else
-      indent += "    ";
+//   std::string indent = "";
+//   for (int i = 0; i < depth; i++) {
+//     if (i == depth-1)
+//       indent += "|---";
+//     else
+//       indent += "    ";
 
-  }
-  std::string k = Inst::getKindName(I->K);
-  // print kind name and then other relevant info depending on kind
-  llvm::errs() << indent << k;
-  if (k=="const") 
-    llvm::errs() << " " << I->Val;
-  else if (k=="var") {
-    // can check for input or reservedconst using SynthesisConstID
-    std::string s = I->SynthesisConstID == 0 ? " (input)" : " (reservedconst)";
-    llvm::errs() << " " << I->Name << s;
-  }
-  llvm::errs() << "\n";
-  // print children
-  for (int i = 0; i < I->Ops.size(); i++) {
-    // llvm::outs()<<"Ops\n" <<I->Ops.size();
-    OpsTree(I->Ops[i], depth+1);
-  }
-}
+//   }
+//   std::string k = Inst::getKindName(I->K);
+//   // print kind name and then other relevant info depending on kind
+//   llvm::errs() << indent << k;
+//   if (k=="const") 
+//     llvm::errs() << " " << I->Val;
+//   else if (k=="var") {
+//     // can check for input or reservedconst using SynthesisConstID
+//     std::string s = I->SynthesisConstID == 0 ? " (input)" : " (reservedconst)";
+//     llvm::errs() << " " << I->Name << s;
+//   }
+//   llvm::errs() << "\n";
+//   // print children
+//   for (int i = 0; i < I->Ops.size(); i++) {
+//     // llvm::outs()<<"Ops\n" <<I->Ops.size();
+//     OpsTree(I->Ops[i], depth+1);
+//   }
+// }
 int SolveInst(const MemoryBufferRef &MB, Solver *S) {
   InstContext IC;
   std::string ErrStr;
@@ -143,9 +143,9 @@ int SolveInst(const MemoryBufferRef &MB, Solver *S) {
   }
   //Rohan
 
-    for (auto &Rep : Reps) {
-      ModAnalysis::OpsTree(Rep.Mapping.RHS,0);
-    }
+    // for (auto &Rep : Reps) {
+    //   ModAnalysis::OpsTree(Rep.Mapping.RHS,0);
+    // }
 
   if (ParseOnly || ParseLHSOnly) {
     llvm::outs() << "; parsing successful\n";
@@ -353,25 +353,38 @@ int SolveInst(const MemoryBufferRef &MB, Solver *S) {
       std::vector<Inst *> Inputs;
       findVars(SC.LHS, Inputs);
       PruningManager P(SC, Inputs, /*StatsLevel=*/3);
+      ModAnalysis MA(Rep.Mapping.LHS,Rep.Mapping.RHS);
       P.init();
+      MA.getinput(P.getInputVals());
 
-    // Rohan
+    // Rohan's changes
+    
       totcount+=1;
       llvm::outs()<<"total count "<<totcount <<"\n";
       static int count = 0;
-      // OpsTree(Rep.Mapping.LHS,1);
-      int16_t ModVal = ModAnalysis::ModAnalysisVal(Rep.Mapping.LHS,Rep.Mapping.RHS);
-      if (ModVal || P.isInfeasible(Rep.Mapping.RHS, /*StatsLevel=*/3)) {
-        llvm::outs() << "Pruning succeeded.\n";
-        llvm::outs()<<"Pruned via mod "<< count <<"\n";
-      } else if(ModVal) {
+      static int mod_cnt = 0;
+
+      // llvm::outs()<<"LHS :\n";
+      // MA.OpsTree(Rep.Mapping.LHS, 0);
+      // llvm::outs()<<"RHS:\n";
+      // MA.OpsTree(Rep.Mapping.RHS, 0);
+
+      if (P.isInfeasible(Rep.Mapping.RHS, /*StatsLevel=*/3)) {
         count+=1;
-        llvm::outs()<<"Pruned via mod "<< count <<"\n";
+        llvm::outs() << "Pruning succeeded.\n";
+        llvm::outs()<<"Pruned via mod "<<mod_cnt<<"Via other "<<count<<"\n";
+
+      } 
+      else if(MA.RunModAnalysis()){
+        mod_cnt+=1;
+        llvm::outs()<<"Pruned via mod "<<mod_cnt<<"Via other "<<count<<"\n";
       }
-      else{
-        llvm::outs()<<"Pruned via mod "<< count <<"\n";
+      else {
         llvm::outs() << "Pruning failed.\n";
+        llvm::outs()<<"Pruned via mod "<<mod_cnt<<"Via other "<<count<<"\n";
       }
+
+
     } else if (InferAP) {
         bool FoundWeakest = false;
         S->abstractPrecondition(Rep.BPCs, Rep.PCs, Rep.Mapping, IC, FoundWeakest);

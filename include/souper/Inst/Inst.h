@@ -187,8 +187,8 @@ struct Inst : llvm::FoldingSetNode {
   int nHoles = -1;
 };
 
-/// A mapping from an Inst to a replacement. This may either represent a
-/// path condition or a candidate replacement.
+//  A mapping from an Inst to a replacement. This may either represent a
+//  path condition or a candidate replacement.
 struct InstMapping {
   InstMapping() : LHS(0), RHS(0) {}
   InstMapping(Inst *LHS, Inst *RHS)

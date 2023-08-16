@@ -840,10 +840,10 @@ EnumerativeSynthesis::synthesize(SMTLIBSolver *SMTSolver,
 
   //Rohan Change
 
-  for (Inst* Cand: Cands){
-    llvm::outs()<<"Candidates: \n";
-    ModAnalysis::OpsTree(Cand,0);
-  }
+  // for (Inst* Cand: Cands){
+  //   llvm::outs()<<"Candidates: \n";
+  //   ModAnalysis::OpsTree(Cand,0);
+  // }
 
   std::set<Inst*> Visited(Cands.begin(), Cands.end());
 

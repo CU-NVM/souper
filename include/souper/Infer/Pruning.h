@@ -21,6 +21,7 @@
 #include "souper/Infer/AbstractInterpreter.h"
 #include "souper/Infer/Interpreter.h"
 #include "souper/Inst/Inst.h"
+#include "souper/Infer/ModAnalysis.h"
 
 #include <unordered_map>
 #include <time.h>
@@ -58,6 +59,7 @@ private:
   std::vector<ConcreteInterpreter> ConcreteInterpreters;
   std::vector<llvm::KnownBits> LHSKnownBits;
   std::vector<llvm::ConstantRange> LHSConstantRange;
+
   HoleAnalysis HA;
   llvm::KnownBits LHSKnownBitsNoSpec;
   InputVarInfo LHSMustDemandedBits;

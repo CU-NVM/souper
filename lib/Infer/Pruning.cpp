@@ -17,6 +17,7 @@
 #include "souper/Infer/AbstractInterpreter.h"
 #include "souper/Infer/Pruning.h"
 #include "souper/Extractor/Candidates.h"
+#include "souper/Infer/ModAnalysis.h"
 #include <cstdlib>
 
 namespace {
@@ -191,19 +192,19 @@ bool PruningManager::isInfeasible(souper::Inst *RHS,
       return true;
     }
 
-//     auto LHSCR = ConstantRangeAnalysis().findConstantRange(SC.LHS, BlankCI, false);
-//     if (StatsLevel > 2) {
-//         llvm::errs() << "  LHSCR : " << LHSCR << "\n";
-//         llvm::errs() << "  RB    : " << RestrictedBits.toString(2, false) << "\n";
-//     }
-//     if (RestrictedBits == 0 && !LHSCR.isFullSet()) {
-//       if (StatsLevel > 2) {
-//         llvm::errs() << "  pruned using restricted bits cr analysis.\n";
-//         llvm::errs() << "  LHSCR : " << LHSCR << "\n";
-//         llvm::errs() << "  RB    : " << RestrictedBits.toString(2, false) << "\n";
-//       }
-//       return true;
-//     }
+    // auto LHSCR = ConstantRangeAnalysis().findConstantRange(SC.LHS, BlankCI, false);
+    // if (StatsLevel > 2) {
+    //     llvm::errs() << "  LHSCR : " << LHSCR << "\n";
+    //     llvm::errs() << "  RB    : " << RestrictedBits.toString(2, false) << "\n";
+    // }
+    // if (RestrictedBits == 0 && !LHSCR.isFullSet()) {
+    //   if (StatsLevel > 2) {
+    //     llvm::errs() << "  pruned using restricted bits cr analysis.\n";
+    //     llvm::errs() << "  LHSCR : " << LHSCR << "\n";
+    //     llvm::errs() << "  RB    : " << RestrictedBits.toString(2, false) << "\n";
+    //   }
+    //   return true;
+    // }
     if (EnableHeavyDataflowPruning) {
       for (auto C : Constants) {
         auto CutOff = 0xFFFFFF;
@@ -262,9 +263,11 @@ bool PruningManager::isInfeasible(souper::Inst *RHS,
     }
 
     if (LHSHasPhi && AbstractInterpretPhi) {
+      llvm::outs()<<"Inside lhs has phi\n";
       auto LHSCR = LHSConstantRange[I];
       auto RHSCR = ConstantRangeAnalysis().findConstantRange(RHS, ConcreteInterpreters[I]);
       if (!RHSCR.isFullSet()) {
+        llvm::outs()<<"Inside lhs has phi 2 \n";
         FoundNonTopAnalysisResult = true;
       }
       if (LHSCR.intersectWith(RHSCR).isEmptySet()) {
@@ -575,13 +578,28 @@ void PruningManager::init() {
   for (auto &&Input : InputVals) {
     ConcreteInterpreters.emplace_back(SC.LHS, Input);
   }
+  
+
+  //Rohan's Change
+  // int count=0;
+  // for (auto &Input : InputVals){
+  //   llvm::outs()<<"Count:bef "<<count++<<"\n";
+  //   for (auto I = Input.begin();I!= Input.end();I++){
+   
+  //   llvm::outs()<<"Count: "<<count++<<"\n";
+  //   ModAnalysis::OpsTree(I->first,1);
+  //   }
+  // }
+
 
   if (hasGivenInst(SC.LHS, [](Inst *I){ return I->K == Inst::Phi;})) {
     LHSHasPhi = true;
     if (AbstractInterpretPhi) {
       // Abstract interpret LHS because of phi
       for (unsigned I = 0; I < InputVals.size(); I++) {
-        LHSKnownBits.push_back(KnownBitsAnalysis().findKnownBits(SC.LHS, ConcreteInterpreters[I]));
+        llvm::KnownBits KB = KnownBitsAnalysis().findKnownBits(SC.LHS, ConcreteInterpreters[I]);
+        LHSKnownBits.push_back(KB);
+        // llvm::outs()<<"Inside concrete vals "<<KB.Zero<<" "<<KB.One<<"\n";
         LHSConstantRange.push_back(ConstantRangeAnalysis().findConstantRange(SC.LHS, ConcreteInterpreters[I]));
       }
     }
@@ -589,6 +607,7 @@ void PruningManager::init() {
 
   if (StatsLevel > 1) {
     DataflowPrune= [this](Inst *I, std::vector<Inst *> &RI) {
+      // llvm::outs()<<"Inside init pruning 1\n";
       TotalGuesses++;
       ReplacementContext RC;
       RC.printInst(SC.LHS, llvm::errs(), true);
@@ -606,6 +625,7 @@ void PruningManager::init() {
     };
   } else if (StatsLevel == 1) {
       DataflowPrune= [this](Inst *I, std::vector<Inst *> &RI) {
+        // llvm::outs()<<"Inside init pruning 2\n";
       TotalGuesses++;
       if (isInfeasible(I, StatsLevel)) {
         NumPruned++;
@@ -615,7 +635,8 @@ void PruningManager::init() {
     };
   } else {
     DataflowPrune= [this](Inst *I, std::vector<Inst *> &RI) {
-      return !isInfeasible(I, StatsLevel);
+      // llvm::outs()<<"Inside init pruning 3\n";
+    return !isInfeasible(I, StatsLevel);
     };
   }
 
@@ -810,6 +831,7 @@ std::vector<ValueCache> PruningManager::generateInputSets(
     if (isInputValid(Cache)) {
       i++;
       InputSets.push_back(Cache);
+
     }
   }
 
