@@ -247,8 +247,7 @@ bool PruningManager::isInfeasible(souper::Inst *RHS,
       // are all TOP.
       // TODO: Maybe figure out a better way to determine if an RHS
       // is not amenable to dataflow analysis. (example : x + HOLE)
-      // TODO: Maybe tune this threshold, or make it user controllable
-      // N = 10 results in a 2x performance boost for a 5% increase in
+      // Threshold = 10 results in a 2x performance boost for a 5% increase in
       // the final number of guesses.
       // Might make sense to make this threshold depend on the RHS
     }
@@ -782,48 +781,10 @@ std::vector<ValueCache> PruningManager::generateInputSets(
     }
   } while (std::next_permutation(specialInputs.begin(), specialInputs.end()));
 
-  // input tests 0,1,-1,smin,smax are added again here
-  /*
-  for (auto &&I : Inputs) {
-    if (I->K == souper::Inst::Var)
-      Cache[I] = {llvm::APInt(I->Width, 0)};
-  }
-  if (isInputValid(Cache))
-    InputSets.push_back(Cache);
-
-  for (auto &&I : Inputs) {
-    if (I->K == souper::Inst::Var)
-      Cache[I] = {llvm::APInt(I->Width, 1)};
-  }
-  if (isInputValid(Cache))
-    InputSets.push_back(Cache);
-
-  for (auto &&I : Inputs) {
-    if (I->K == souper::Inst::Var)
-      Cache[I] = {llvm::APInt(I->Width, -1)};
-  }
-  if (isInputValid(Cache))
-    InputSets.push_back(Cache);
-
-  for (auto &&I : Inputs) {
-    if (I->K == souper::Inst::Var)
-      Cache[I] = {llvm::APInt::getSignedMaxValue(I->Width)};
-  }
-  if (isInputValid(Cache))
-    InputSets.push_back(Cache);
-
-  for (auto &&I : Inputs) {
-    if (I->K == souper::Inst::Var)
-      Cache[I] = {llvm::APInt::getSignedMinValue(I->Width)};
-  }
-  if (isInputValid(Cache))
-    InputSets.push_back(Cache);
-  */
-
  // generate random inputs
   constexpr int MaxTries = 100;
   constexpr int NumLargeInputs = 5;
-  std::srand(time(0));
+  std::srand(0);//souper devs: std::srand(0) is intentional. We want a diverse set of deterministic inputs, and not random ones.
   int i, m;
   for (i = 0, m = 0; i < NumLargeInputs && m < MaxTries; ++m ) {
     for (auto &&I : Inputs) {
