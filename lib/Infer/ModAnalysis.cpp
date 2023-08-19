@@ -4,6 +4,7 @@
 #include <bitset>
 using namespace souper;
 using namespace std;
+
 // prints the instructions tree
 void ModAnalysis::OpsTree(Inst* I, int depth) {
   // indent for tree depth
@@ -63,7 +64,7 @@ int32_t ModAnalysis::FindModVal(Inst* I, ValueCache Input){
           result = Input[I].getValue().getLimitedValue() % mod_val;
         }
         else{
-          result = 100 % mod_val;
+          result = 100 % mod_val;//defaults to this if we run out of generated Input values
         }
           }
       else if (KindName == "const"){
@@ -190,7 +191,12 @@ bool ModAnalysis::hasphinode(Inst* I){
 
 }
 
-
+/*
+This function runs the mod analysis for all valid inputs generted by souper and 
+compares the values for LHS and RHS.
+if they don't work, it takes a bunch of values for mod bases and then tries to 
+infer LHS and RHS.
+*/
 
 int32_t ModAnalysis::ModForAllInputs(Inst* LHS,Inst* RHS, vector<ValueCache> Inputs){
   int16_t ModVal = 0;
@@ -201,23 +207,19 @@ int32_t ModAnalysis::ModForAllInputs(Inst* LHS,Inst* RHS, vector<ValueCache> Inp
     }
   }
   ValueCache V ;
-  llvm::outs()<<"lhs Has phi node: "<<(int)hasphinode(LHS)<<"\n";
-
-  llvm::outs()<<"rhs Has phi node: "<<(int)hasphinode(RHS)<<"\n";
-
+/*
+This is a incomplete implementation of the phiset concept.
+We try to create a set of values based on the phi nodes and
+compare LHS and RHS.
+*/
   if (hasphinode(LHS)){
     for (auto input: Inputs){
       FormPhiset(LHS,input);
       InterpretPhi(LHS,input);
       vector<int32_t> lhsinfer = phimap[LHS->Name];
-      // InterpretPhi(RHS,input);
-      // vector<int32_t> rhsinfer = phimap[RHS->Name];
-      llvm::outs()<<"lhs vector is\n" ;
       for(auto in:lhsinfer)
         llvm::outs()<<in<<" ";
-      // llvm::outs()<<"\nrhs value is\n";
-      // for(auto in:rhsinfer)
-      //   llvm::outs()<<in<<" ";
+
     }
   }
 
@@ -226,6 +228,12 @@ int32_t ModAnalysis::ModForAllInputs(Inst* LHS,Inst* RHS, vector<ValueCache> Inp
   }
   return MOD_ANALYSIS_UNSUCCESSFUL;
 }
+
+/*
+ NOTE: Incomplete Implementation
+This is an attempt to concrete interpret value for LHS and candidate by assuming some value 
+for vars.
+*/
 
 int32_t ModAnalysis::ConcInterpretInst(Inst* I, ValueCache var){
       string Kindname = I->getKindName(I->K);
@@ -262,7 +270,10 @@ int32_t ModAnalysis::ConcInterpretInst(Inst* I, ValueCache var){
         return -1;
 }
 
-
+/*
+NOTE: Incomplete Implementation
+Function is used to create a hash map for the phi node present in the IR.
+*/
 vector<int32_t> ModAnalysis::Phiset(Inst* I,ValueCache Input){
   vector<int32_t> phiset;
   for (int i = 1; i<I->Ops.size();i++){
@@ -271,6 +282,10 @@ vector<int32_t> ModAnalysis::Phiset(Inst* I,ValueCache Input){
   return phiset;
 }
 
+/*
+NOTE: Incomplete Implementation
+Function is used to create a hash map for the phi node present in the IR.
+*/
 void ModAnalysis::FormPhiset(Inst* I,ValueCache Input){
   string Kindname = I->getKindName(I->K);
 
@@ -284,8 +299,9 @@ void ModAnalysis::FormPhiset(Inst* I,ValueCache Input){
   }
 
 }
+/*
 
-
+*/
 
 void ModAnalysis::InterpretPhi(Inst* I, ValueCache Input){
   

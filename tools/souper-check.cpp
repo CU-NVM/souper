@@ -364,11 +364,6 @@ int SolveInst(const MemoryBufferRef &MB, Solver *S) {
       static int count = 0;
       static int mod_cnt = 0;
 
-      // llvm::outs()<<"LHS :\n";
-      // MA.OpsTree(Rep.Mapping.LHS, 0);
-      // llvm::outs()<<"RHS:\n";
-      // MA.OpsTree(Rep.Mapping.RHS, 0);
-
       if (P.isInfeasible(Rep.Mapping.RHS, /*StatsLevel=*/3)) {
         count+=1;
         llvm::outs() << "Pruning succeeded.\n";
