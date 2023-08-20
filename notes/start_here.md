@@ -1,0 +1,50 @@
+Original Souper Paper:  https://arxiv.org/pdf/1711.04422.pdf
+
+Dataflow Pruning Paper: https://users.cs.utah.edu/~regehr/dataflow-pruning.pdf
+
+# General Souper Information
+
+Given a specification of Souper IR (LHS), Souper generates candidates of cheaper IR (RHS), and sends them to a SAT solver to determine if they mean the same thing. In souper-check, pruning is used to quickly determine if the LHS and RHS are different.
+
+## Souper IR vs LLVM IR
+
+Souper has its own IR and immediately converts LLVM to Souper IR when it receives it. Souper IR has a tree structure based on what nodes are used. For example, 
+```
+%0:i32 = var
+%1:i32 = add %0, 3:i32
+%2:i32 = add %1, %1
+result %2
+``` 
+Would look like:
+‘’’
+add
+|---add
+    |---var 0 (input)
+    |---const 3
+|---add
+    |---var 0 (input)
+    |---const 3
+‘’’
+
+If a line isn’t reachable by the result node, it won’t be parsed into Souper IR.
+
+# Git Branches
+
+## Main
+
+Souper with a small fix to input generation
+
+## Autoprune
+
+The branch with Autoprune
+
+## Mod Analysis
+
+The branch with mod analysis, and the branch with the most tools written by CU
+
+build/souper prints candidates, and ModAnalysis::OpsTree prints the souper IR in its tree structure
+
+## Dataflow Input Selection
+
+The branch with input selection
+
