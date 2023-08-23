@@ -90,34 +90,6 @@ static cl::opt<bool> CheckAllGuesses("souper-check-all-guesses",
     cl::desc("Continue even after a valid RHS is found. (default=false)"),
     cl::init(false));
 
-
-// void OpsTree(Inst* I ,int depth) {
- 
-//   std::string indent = "";
-//   for (int i = 0; i < depth; i++) {
-//     if (i == depth-1)
-//       indent += "|---";
-//     else
-//       indent += "    ";
-
-//   }
-//   std::string k = Inst::getKindName(I->K);
-//   // print kind name and then other relevant info depending on kind
-//   llvm::errs() << indent << k;
-//   if (k=="const") 
-//     llvm::errs() << " " << I->Val;
-//   else if (k=="var") {
-//     // can check for input or reservedconst using SynthesisConstID
-//     std::string s = I->SynthesisConstID == 0 ? " (input)" : " (reservedconst)";
-//     llvm::errs() << " " << I->Name << s;
-//   }
-//   llvm::errs() << "\n";
-//   // print children
-//   for (int i = 0; i < I->Ops.size(); i++) {
-//     // llvm::outs()<<"Ops\n" <<I->Ops.size();
-//     OpsTree(I->Ops[i], depth+1);
-//   }
-// }
 int SolveInst(const MemoryBufferRef &MB, Solver *S) {
   InstContext IC;
   std::string ErrStr;
@@ -141,11 +113,7 @@ int SolveInst(const MemoryBufferRef &MB, Solver *S) {
       llvm::WriteGraph(llvm::outs(), Rep.Mapping.LHS);
     }
   }
-  //Rohan
 
-    // for (auto &Rep : Reps) {
-    //   ModAnalysis::OpsTree(Rep.Mapping.RHS,0);
-    // }
 
   if (ParseOnly || ParseLHSOnly) {
     llvm::outs() << "; parsing successful\n";
@@ -359,8 +327,7 @@ int SolveInst(const MemoryBufferRef &MB, Solver *S) {
 
     // Rohan's changes
     
-      totcount+=1;
-      llvm::outs()<<"total count "<<totcount <<"\n";
+      totcount+=1; 
       static int count = 0;
       static int mod_cnt = 0;
 

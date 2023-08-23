@@ -572,25 +572,13 @@ void PruningManager::init() {
   }
 
   findVars(Ante, InputVars);
-
+  //Generates a set of valid values for var for concrete interpretation.
+  
   InputVals = generateInputSets(InputVars);
 
   for (auto &&Input : InputVals) {
     ConcreteInterpreters.emplace_back(SC.LHS, Input);
   }
-  
-
-  //Rohan's Change
-  // int count=0;
-  // for (auto &Input : InputVals){
-  //   llvm::outs()<<"Count:bef "<<count++<<"\n";
-  //   for (auto I = Input.begin();I!= Input.end();I++){
-   
-  //   llvm::outs()<<"Count: "<<count++<<"\n";
-  //   ModAnalysis::OpsTree(I->first,1);
-  //   }
-  // }
-
 
   if (hasGivenInst(SC.LHS, [](Inst *I){ return I->K == Inst::Phi;})) {
     LHSHasPhi = true;
@@ -599,15 +587,15 @@ void PruningManager::init() {
       for (unsigned I = 0; I < InputVals.size(); I++) {
         llvm::KnownBits KB = KnownBitsAnalysis().findKnownBits(SC.LHS, ConcreteInterpreters[I]);
         LHSKnownBits.push_back(KB);
-        // llvm::outs()<<"Inside concrete vals "<<KB.Zero<<" "<<KB.One<<"\n";
         LHSConstantRange.push_back(ConstantRangeAnalysis().findConstantRange(SC.LHS, ConcreteInterpreters[I]));
       }
     }
   }
 
+// This is never called so no pruning occurs here
+
   if (StatsLevel > 1) {
     DataflowPrune= [this](Inst *I, std::vector<Inst *> &RI) {
-      // llvm::outs()<<"Inside init pruning 1\n";
       TotalGuesses++;
       ReplacementContext RC;
       RC.printInst(SC.LHS, llvm::errs(), true);
@@ -625,7 +613,6 @@ void PruningManager::init() {
     };
   } else if (StatsLevel == 1) {
       DataflowPrune= [this](Inst *I, std::vector<Inst *> &RI) {
-        // llvm::outs()<<"Inside init pruning 2\n";
       TotalGuesses++;
       if (isInfeasible(I, StatsLevel)) {
         NumPruned++;
@@ -635,7 +622,6 @@ void PruningManager::init() {
     };
   } else {
     DataflowPrune= [this](Inst *I, std::vector<Inst *> &RI) {
-      // llvm::outs()<<"Inside init pruning 3\n";
     return !isInfeasible(I, StatsLevel);
     };
   }
@@ -653,7 +639,7 @@ void PruningManager::init() {
   }
   ExprInfo::analyze(SC.LHS, LHSInfo);
 }
-
+//Checks if the generated input sets are comsistent
 bool isDataflowConsistent(ValueCache &Cache) {
   for (auto &&Pair : Cache) {
     if (Pair.second.hasValue()) {

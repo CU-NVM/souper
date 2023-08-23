@@ -233,6 +233,7 @@ compare LHS and RHS.
  NOTE: Incomplete Implementation
 This is an attempt to concrete interpret value for LHS and candidate by assuming some value 
 for vars.
+Also take reference for Interpreter.cpp to complete the implementation.
 */
 
 int32_t ModAnalysis::ConcInterpretInst(Inst* I, ValueCache var){
@@ -265,7 +266,7 @@ int32_t ModAnalysis::ConcInterpretInst(Inst* I, ValueCache var){
       
       else if (Kindname == "ne")
         return ConcInterpretInst(I->Ops[0],var) != ConcInterpretInst(I->Ops[1],var);
-
+      
       else 
         return -1;
 }
@@ -300,7 +301,8 @@ void ModAnalysis::FormPhiset(Inst* I,ValueCache Input){
 
 }
 /*
-
+  Note: Incomplete Implementation
+  Function is used to concretely interpret phi node based on phisets. 
 */
 
 void ModAnalysis::InterpretPhi(Inst* I, ValueCache Input){
@@ -308,7 +310,6 @@ void ModAnalysis::InterpretPhi(Inst* I, ValueCache Input){
   string Kindname = I->getKindName(I->K);
 
     if (phimap.find(I->Ops[0]->Name) != phimap.end()){
-      llvm::outs()<<"inside phimap\n";
       vector<int32_t> inputs = phimap[I->Ops[0]->Name];
         if (Kindname == "add"){
           for(auto input:inputs){
