@@ -16,6 +16,8 @@ Souper (despite its -help option saying so) doesn’t seem to have pruning imple
 
 2. souper-check
 
+souper-check is the main tool used to test pruning.
+
 It takes files as input with the following syntax:
 ```
 (souper instructions for the LHS)
@@ -25,7 +27,7 @@ result (RHS result)
 ```
 Remember, the LHS is the specification and the RHS is the candidate.
 
-Examples of test files meant for souper-check are in souper/test/Infer/pruning, and also in autoprune.
+Examples of tests meant for souper-check are in souper/test/Infer/pruning, and also in souper/autoprune/dataset.opt.
 The actual file for souper-check’s functionality is souper/tools/souper-check.cpp
 
 An example of running souper-check to test pruning:
@@ -34,6 +36,8 @@ build/souper-check -try-dataflow-pruning -souper-debug-level=3 test/Infer/prunin
 ```
 
 # utils folder, and general testing notes
+
+Note: we didn't end up using the utils folder for testing.souper-check should be the main tool used.
 
 A third way to run souper/test your code is using the utils folder. Mainly the cache_infer script, which  counts the optimizations performed and not-performed. It has an option (-test-pruning) that was probably used to make sure pruning  didn’t decrease the amount of optimizations performed. I will note that given code that was supposed to be optimized by souper, it still said nothing was optimized, so I’m not sure if this script is functional. It could probably be used just to check generated candidates.
 
