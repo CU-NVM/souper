@@ -200,7 +200,9 @@ private:
   }
 };
 
-
+/**
+This function is used to generate the values for reserved constant in the RHS
+*/
 
 void getReservedConsts(souper::Inst *I,
                        std::map<std::string, souper::Inst *> &Result,

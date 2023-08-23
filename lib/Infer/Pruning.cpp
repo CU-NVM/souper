@@ -761,7 +761,11 @@ namespace {
     return llvm::APInt::getSignedMinValue(Width);
   }
 } // anon
-
+/*
+This function is used tp generate a set of valid values for vars in the LHS
+Souper uses it's own method to verify those datasets and reject those which don't
+satisfy the criteria. 
+*/
 std::vector<ValueCache> PruningManager::generateInputSets(
   std::vector<Inst *> &Inputs) {
   std::vector<ValueCache> InputSets;
